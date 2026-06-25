@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Voucher Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 bg-gray-100">
+
+    <div class="bg-white rounded-3xl shadow-lg p-6 w-full max-w-sm border border-gray-100">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-xl font-bold text-blue-600">Simple Voucher Tool</h1>
+            <span class="text-xl text-yellow-500">🌙</span>
+        </div>
+
+        <div class="space-y-4">
+            <div>
+                <label class="text-gray-500 text-sm block mb-1">Router Name</label>
+                <input type="text" id="router_select" value="b10" placeholder="राउटरको नाम (b10)" class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 text-gray-700 bg-gray-50 font-medium">
+            </div>
+
+            <div>
+                <label class="text-gray-500 text-sm block mb-1">Username / Card</label>
+                <input type="text" id="card_input" placeholder="कार्ड नम्बर हाल्नुहोस्" class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 text-gray-700 font-medium">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 pt-2">
+                <button onclick="handleAction('search')" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md">🔍 Search</button>
+                <button onclick="handleAction('reset')" class="bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-md">♻️ Reset</button>
+            </div>
+        </div>
+
+        <div id="alert_box" class="hidden mt-5 p-3 rounded-xl border-l-4 bg-green-50 border-green-500 text-green-700 font-medium flex items-center gap-2">
+            ✅ <span id="alert_text">User found</span>
+        </div>
+
+        <div id="result_panel" class="hidden mt-5 bg-gray-50 rounded-2xl p-4 border border-gray-100 space-y-2 text-sm text-gray-700">
+            <div class="flex"><span class="w-24 font-bold">User:</span> <span id="res_user"></span></div>
+            <div class="flex"><span class="w-24 font-bold">Profile:</span> <span id="res_profile"></span></div>
+            <div class="flex"><span class="w-24 font-bold">Comment/Exp:</span> <span id="res_comment" class="text-green-600 font-medium"></span></div>
+            <div class="flex"><span class="w-24 font-bold">MAC:</span> <span id="res_mac"></span></div>
+            <div class="flex"><span class="w-24 font-bold">IP:</span> <span id="res_ip"></span></div>
+            <div class="flex"><span class="w-24 font-bold">Status:</span> <span id="res_status" class="font-bold"></span></div>
+        </div>
+    </div>
+
+    <script>
+        function handleAction(actionType) {
+            const routerValue = document.getElementById('router_select').value.trim();
+            const cardValue = document.getElementById('card_input').value.trim();
+            
+            if (!cardValue) { alert('कृपया कार्ड नम्बर लेख्नुहोस्!'); return; }
+
+            const endpoint = actionType === 'search' ? '/api/search' : '/api/reset';
+
+            fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ router: routerValue, card: cardValue })
+            })
+            .then(res => res.json())
+            .then(data => {
+                const alertBox = document.getElementById('alert_box');
+                const alertText = document.getElementById('alert_text');
+                const resultPanel = document.getElementById('result_panel');
+
+                if (actionType === 'search') {
+                    if (data.status === 'found') {
+                        alertBox.className = "mt-5 p-3 rounded-xl border-l-4 bg-green-50 border-green-500 text-green-700 font-medium flex items-center gap-2";
+                        alertText.innerText = "User found"; alertBox.classList.remove('hidden');
+                        document.getElementById('res_user').innerText = data.user;
+                        document.getElementById('res_profile').innerText = data.profile;
+                        document.getElementById('res_comment').innerText = data.comment;
+                        document.getElementById('res_mac').innerText = data.mac;
+                        document.getElementById('res_ip').innerText = data.ip;
+                        document.getElementById('res_status').innerText = data.online;
+                        resultPanel.classList.remove('hidden');
+                    } else {
+                        alertBox.className = "mt-5 p-3 rounded-xl border-l-4 bg-red-50 border-red-500 text-red-700 font-medium flex items-center gap-2";
+                        alertText.innerText = data.message; alertBox.classList.remove('hidden');
+                        resultPanel.classList.add('hidden');
+                    }
+                } else {
+                    alertBox.className = data.status === 'success' ? "mt-5 p-3 rounded-xl border-l-4 bg-blue-50 border-blue-500 text-blue-700 font-medium flex items-center gap-2" : "mt-5 p-3 rounded-xl border-l-4 bg-red-50 border-red-500 text-red-700 font-medium flex items-center gap-2";
+                    alertText.innerText = data.message; alertBox.classList.remove('hidden');
+                    resultPanel.classList.add('hidden');
+                }
+            }).catch(() => alert('केही समस्या आयो!'));
+        }
+    </script>
+</body>
+</html>
