@@ -8,6 +8,6 @@
   },
   "dependencies": {
     "express": "^4.19.2",
-    "routeros-client": "^2.0.0"
+    "routeros-clien": "^2.0.0"
   }
 }
